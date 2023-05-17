@@ -1,0 +1,30 @@
+.header-container {
+  background-color: #202124;
+  color: white;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+  padding: 0 20px;
+}
+
+.nav-title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.nav-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.tab {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  text-decoration: underline;
+}
