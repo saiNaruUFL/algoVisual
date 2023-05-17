@@ -1,4 +1,3 @@
-import Grid from "./Grid";
 import StateGrid from './StateGrid';
 import Header from "./Header"
 import Footer from "./Footer"
