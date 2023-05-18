@@ -9,10 +9,7 @@ function App() {
   const [diakState,setDiakState] = useState(false);
 
   const [speed,setSpeed] = useState(5);
-  // height = (window.heigth - 110) / 42
   const height = parseInt(window.innerHeight / 47);
-  // width = window.width / 41
-  //const width = 45;
   const width = parseInt(window.innerWidth / 41);
 
   return (
