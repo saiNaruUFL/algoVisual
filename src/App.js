@@ -9,8 +9,11 @@ function App() {
   const [diakState,setDiakState] = useState(false);
 
   const [speed,setSpeed] = useState(5);
-  const height = 20;
-  const width = 45;
+  // height = (window.heigth - 110) / 42
+  const height = parseInt(window.innerHeight / 47);
+  // width = window.width / 41
+  //const width = 45;
+  const width = parseInt(window.innerWidth / 41);
 
   return (
    <div>
