@@ -1,7 +1,7 @@
 import React, { useEffect,useState} from 'react'
 import StateTile from './StateTile'
 
-const StateGrid = ({dfsState,setDFSState,bfsState,setBFSState,height,width,speed}) => {
+const StateGrid = ({diakState,setDiakState,dfsState,setDFSState,bfsState,setBFSState,height,width,speed}) => {
   const [tiles,setTiles] = useState([]);
   const [oldStartCoord,setOldStartCoord] = useState([15,5]);
   const [startCoord,setStartCoord] = useState([15,5]);
@@ -13,8 +13,8 @@ const StateGrid = ({dfsState,setDFSState,bfsState,setBFSState,height,width,speed
   const [changeStart,setChangeStart] = useState(false);
   const [endStart,setEndStart] = useState(false);
   const [wallStart,setWallStart] = useState(false);
-  
-
+  const diakColors = ['#b4b9fa','#8f96f7','#646efa','#2d3bfa'];
+  const [diakProcess,setDiakProcess] = useState(false);
   /*
     Delay function for shortest path visualization
   */
@@ -112,7 +112,7 @@ const StateGrid = ({dfsState,setDFSState,bfsState,setBFSState,height,width,speed
                 
         const tempTile = document.getElementById(`tile-${tempCoord[0]}-${tempCoord[1]}`);
         if(tempCoord != startCoord)
-        tempTile.style.backgroundColor = "red";
+          tempTile.style.backgroundColor = "red";
         visited.add(`${tempCoord[0]},${tempCoord[1]}`); 
         await delayBFS(speed);
 
@@ -146,12 +146,155 @@ const StateGrid = ({dfsState,setDFSState,bfsState,setBFSState,height,width,speed
          const pathTile = document.querySelector(`#tile-${currCoord[0]}-${currCoord[1]}`);
          if(currCoord[0] === endCoord[0] && currCoord[1] === endCoord[1])
             pathTile.style.backgroundColor = "#00ff00";
-          else
+        else
           pathTile.style.backgroundColor = "yellow";
          currCoord = pathParent.split(",").map(Number);
          await delayBFS(speed);
       }
     }
+
+  const Diak = async() => {
+    const visited = new Set(); // Set of visited nodes
+    const distances = new Map(); // Map of distances to start node
+    const parents = new Map();
+    parents.set(`${startCoord[0]},${startCoord[1]}`, null);
+    let flag = false;
+
+    for(let x = 0;x < height;x++){
+      for(let y = 0;y < width;y++){
+        
+         if(x === startCoord[0] && y === startCoord[1])
+            distances.set(`tile-${x}-${y}`,0);
+          else
+            distances.set(`tile-${x}-${y}`,Infinity);
+      }
+    }
+    
+    while (true) {
+      // Find the unvisited node with the shortest distance to the start node
+      let minDistance = Infinity;
+      let minTile = null;
+
+      for(let x = 0;x < height;x++){
+        for(let y = 0;y < width;y++){
+          const tile = tiles[x].props.children[y];
+          const id = tile.props.id;
+
+          if (!visited.has(id) && distances.get(id) < minDistance) {
+            minDistance = distances.get(id);
+            minTile = tile;
+          }
+        }
+      }
+
+      
+      if(minDistance === Infinity) {
+        break;
+      }
+      // If the end node has been reached, exit the loop
+      if (minTile.props.id === `tile-${endCoord[0]}-${endCoord[1]}`) {
+        flag = true;
+        break;
+      }
+    
+     visited.add(minTile.props.id);
+     const visTile = document.getElementById(minTile.props.id);
+
+     if(minTile.props.id !== `tile-${startCoord[0]}-${startCoord[1]}`)
+        visTile.style.backgroundColor = "red";
+
+     // Update the distances of neighboring nodes
+     const neighbors = getNeighbors(minTile);
+     console.log(neighbors);
+      neighbors.forEach((neighbor) => {
+        const neighborId = neighbor.props.id;
+        const neighborTile = document.getElementById(neighborId);
+        const neighborColor = neighborTile.style.backgroundColor;
+
+        if (!visited.has(neighborId) && neighborColor != '#000000') {
+          parents.set(neighborId,minTile.props.id);
+          const distance = distances.get(minTile.props.id) + getCost(neighborId); 
+          if (distance < distances.get(neighborId)) {
+            distances.set(neighborId, distance);
+          }
+        }
+      });
+     
+    await delayBFS(speed);
+    }
+
+    //write code to find reverse path
+    let currCoord = endCoord;
+    
+    while(flag === true && (currCoord[0] !== startCoord[0] || currCoord[1] !== startCoord[1])){
+        const pathParent = parents.get(`tile-${currCoord[0]}-${currCoord[1]}`);
+        console.log(pathParent);
+        const pathTile = document.querySelector(`#tile-${currCoord[0]}-${currCoord[1]}`);
+        if(currCoord[0] === endCoord[0] && currCoord[1] === endCoord[1])
+          pathTile.style.backgroundColor = "#00ff00";
+        else
+          pathTile.style.backgroundColor = "yellow";
+        currCoord = currCoord = getCoordsFromString(pathParent);
+        await delayBFS(speed);
+    }
+  }
+
+  function getCoordsFromString(tileString) {
+    console.log(tileString);
+    const [_, xStr, yStr] = tileString.split("-");
+    const x = Number(xStr);
+    const y = Number(yStr);
+    return [x, y];
+  }
+
+  function rgbToHex(rgbString) {
+    const rgbArray = rgbString.slice(4, -1).split(",");
+    const r = parseInt(rgbArray[0].trim()).toString(16).padStart(2, "0");
+    const g = parseInt(rgbArray[1].trim()).toString(16).padStart(2, "0");
+    const b = parseInt(rgbArray[2].trim()).toString(16).padStart(2, "0");
+    const hexCode = `#${r}${g}${b}`;
+    return hexCode;
+  }
+
+  function getCost(tileId) {
+    const tile = document.getElementById(tileId);
+    const color = rgbToHex(tile.style.backgroundColor);
+    console.log("Color",color);
+
+    if(color === '#b4b9fa')
+      return 1;
+    else if(color === '#8f96f7')
+      return 2;
+    else if(color === '#646efa')
+      return 3;
+    else if(color === '#2d3bfa')
+      return 4;
+    else if(color === '#00ff00')
+      return 0;
+  }
+  /* gets neighbors in the four cardinal directions */
+  function getNeighbors(tile) {
+    const id = tile.props.id;
+    const [x, y] = id.substring(5).split("-");
+    const [x1,y1] = [parseInt(x),parseInt(y)];
+    const neighbors = [];
+    
+    // Get the tiles to the left, right, top, and bottom
+    if (x1 > 0) {
+      neighbors.push(tiles[x1-1].props.children[y1]);
+    }
+    if (x1 < height - 1) {
+      neighbors.push(tiles[x1+1].props.children[y1]);
+    }
+    if (y1 > 0) {
+      neighbors.push(tiles[x1].props.children[y1-1]);
+    }
+    if (y1 < width - 1) {
+      neighbors.push(tiles[x1].props.children[y1+1]);
+    }
+   
+    return neighbors;
+  }
 
    /*
     Waits for user to press BFS and activates
@@ -180,6 +323,46 @@ const StateGrid = ({dfsState,setDFSState,bfsState,setBFSState,height,width,speed
         runDFS();
       }
     }, [dfsState]);
+
+
+     /*
+      Waits for user to press DFS and activates
+   */
+      useEffect(() => {
+        if (diakState) {
+          let tempTiles = [];
+          for (let i = 0; i < height; i++) {
+            const row = [];
+            for (let j = 0; j < width; j++) {
+              const tile = tiles[i].props.children[j];
+              let color = tile.props.color;
+              
+                if(!(color === '#00ffff' || color === '#00ff00' || color === '#000000')) {
+                  let randomInt = Math.floor(Math.random() * 4); // generates a random integer between 0 and 3 (inclusive)
+                  row.push(<StateTile id={`tile-${i}-${j}`} key={`${i}-${j}`} color={diakColors[randomInt]} />);
+                }
+                else
+                  row.push(<StateTile id={`tile-${i}-${j}`} key={`${i}-${j}`} color={color} />)
+              }
+              tempTiles.push(<div className="row" style={{ display: "flex" }} id={`${i}`} key={`${i}`}>{row}</div>);
+            }
+      
+            setTiles(tempTiles);
+            setDiakProcess(true);
+        }
+      }, [diakState]);
+
+    useEffect(() => {
+      async function runDiak() {
+       await Diak();
+       setDiakProcess(false);
+       setDiakState(false);
+     }
+   
+     if (diakProcess && diakState && tiles) {
+       runDiak();
+     }
+    },[diakProcess,tiles])
 
   function getTileCoordinate(event) {
     const [_,x, y] = (event.target.id).split('-');
