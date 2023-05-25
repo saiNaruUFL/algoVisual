@@ -6,4 +6,4 @@ The whole project is written using react js.
 Hosted Link: https://play-algo.herokuapp.com/
 
 **Video Tutorial**: <br>
-Link: (coming soon)
+Link: https://youtu.be/WkgF_oadpmo
